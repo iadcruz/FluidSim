@@ -1,7 +1,7 @@
 //Constants
 const gridHeight = 600
 const gridWidth = 600
-const dt = 0.01
+const dt = 5
 const viscosity = 0.1
 const rho = 1.0
 
@@ -24,13 +24,13 @@ let u = createArr(gridHeight, gridWidth, 0)
 let v = createArr(gridHeight, gridWidth, 0)
 let p = createArr(gridHeight, gridWidth, 0)
 
-let fx = createArr(gridHeight, gridWidth, 5)
-let fy = createArr(gridHeight, gridWidth, -5)
+let fx = createArr(gridHeight, gridWidth, 0)
+let fy = createArr(gridHeight, gridWidth, 0)
 
-/*
-for (let i = gridHeight / 2 - 25; i < gridHeight / 2 + 25; i ++) {
-    fx[1][i] = 20;
-} */
+for (let j = gridWidth / 2 - 25; j < gridWidth / 2 + 25; j ++) {
+    fy[1][j] = -9.8;
+}
+
 
 //Apply the forces to each component of the velocity vectors
 function applyForces(u, v, fx, fy, dt) {
@@ -48,7 +48,7 @@ function advection(u, v, field, dt) {
     for (let i = 1; i < gridHeight-1; i ++) {
         for (let j = 1; j < gridWidth-1; j ++) {
             let x = i - dt * u[i][j];
-            let y = i - dt * v[i][j];
+            let y = j - dt * v[i][j];
             x = Math.max(x, 0.5);
             x = Math.min(x, gridWidth - 1.5);
             y = Math.max(y, 0.5);
@@ -98,8 +98,8 @@ function pressureCalculation(p, u, v, rho, dt) {
 
     for (let i = 1; i < gridHeight-1; i ++) {
         for (let j = 1; j < gridWidth - 1; j ++) {
-            divergence[i][j] = 0.5 * h * (u[i+1][j] - u[i-1][j] + v[i][j+1] - v[i][j-1])
-            p[i][j] = 0
+            divergence[i][j] = 0.5 * h * (u[i][j+1] - u[i][j-1] + v[i+1][j] - v[i-1][j]);
+            p[i][j] = 0;
         }
     }
 
@@ -123,8 +123,8 @@ function projectVelocity(u, v, p) {
     let h = CLF * 1 / gridHeight;
     for (let i = 1; i < gridHeight - 1; i ++) {
         for (let j = 1; j < gridWidth - 1; j ++) {
-            u[i][j] -= 0.5 * h * (p[i+1][j] - p[i-1][j]);
-            v[i][j] -= 0.5 * h * (p[i][j+1] - p[i][j-1]);
+            u[i][j] -= 0.5 * h * (p[i][j+1] - p[i][j-1]);
+            v[i][j] -= 0.5 * h * (p[i+1][j] - p[i-1][j]);
         }
     }
 }
@@ -133,54 +133,40 @@ let canvas = document.getElementById("grid");
 let ctx = canvas.getContext("2d");
 
 function display(u, v, p) {
-
-    const colors = ['#0000FF', '#00FFFF', '#00FF00', '#FFFF00', '#FF0000'];
-
     let maxMagnitude = 0;
     for (let i = 0; i < gridHeight; i++) {
         for (let j = 0; j < gridWidth; j++) {
-            const magnitude = Math.sqrt(u[i][j] ** 2 + v[i][j] ** 2);
-            maxMagnitude = Math.max(maxMagnitude, magnitude);
+            let magnitude = Math.sqrt(u[i][j] ** 2 + v[i][j] ** 2);
+            if (magnitude > maxMagnitude) {
+                maxMagnitude = magnitude;
+            }
         }
     }
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Draw velocity vectors with color representing magnitude
-    for (let i = 0; i < gridHeight; i++) {
-        for (let j = 0; j < gridWidth; j++) {
-            const magnitude = Math.sqrt(u[i][j] ** 2 + v[i][j] ** 2);
-            const normalizedMagnitude = magnitude / maxMagnitude;
-            const colorIndex = Math.floor(normalizedMagnitude * (colors.length - 1));
-            const colorFraction = (normalizedMagnitude * (colors.length - 1)) % 1;
-            const color1 = colors[colorIndex];
-            const color2 = colors[colorIndex + 1] || colors[colorIndex];
-            const color = interpolateColor(color1, color2, colorFraction);
-            ctx.fillStyle = color;
-            ctx.beginPath();
-            ctx.arc(j, i, 2, 0, 2 * Math.PI);
-            ctx.fill();
+    let normalizedMagnitudes = createArr(gridHeight, gridWidth, 0);
+    for (let i = 1; i < gridHeight - 1; i ++) {
+        for (let j = 1; j < gridWidth - 1; j ++) {
+            let magnitude = Math.sqrt(u[i][j] ** 2 + v[i][j] ** 2);
+            normalizedMagnitudes[i][j] = magnitude / maxMagnitude;
+        }
+    }
+    let colors = getColors(normalizedMagnitudes);
+    for (let i = 1; i < gridHeight; i ++) {
+        for (let j = 1; j < gridWidth; j ++) {
+            ctx.fillStyle = "rgb(" + colors[i][j][0] + ", 0, " + colors[i][j][1] + ")";
+            ctx.fillRect(j * canvas.width / gridWidth, i * canvas.height / gridHeight, 1, 1);
         }
     }
 }
 
-function interpolateColor(color1, color2, fraction) {
-    const r1 = parseInt(color1.substring(1, 3), 16);
-    const g1 = parseInt(color1.substring(3, 5), 16);
-    const b1 = parseInt(color1.substring(5, 7), 16);
-    const r2 = parseInt(color2.substring(1, 3), 16);
-    const g2 = parseInt(color2.substring(3, 5), 16);
-    const b2 = parseInt(color2.substring(5, 7), 16);
-
-    const r = Math.round(r1 + (r2 - r1) * fraction);
-    const g = Math.round(g1 + (g2 - g1) * fraction);
-    const b = Math.round(b1 + (b2 - b1) * fraction);
-
-    return '#' + componentToHex(r) + componentToHex(g) + componentToHex(b);
-}
-
-function componentToHex(c) {
-    const hex = c.toString(16);
-    return hex.length == 1 ? '0' + hex : hex;
+function getColors(normalizedMagnitudes) {
+    let colors = createArr(gridHeight, gridWidth, 0);
+    for (let i = 0; i < gridHeight; i ++) {
+        colors[i] = [];
+        for (let j = 0; j < gridWidth; j ++) {
+            colors[i][j] = [255 * normalizedMagnitudes[i][j], 255 * (1 - normalizedMagnitudes[i][j])];
+        }
+    }
+    return colors;
 }
 
 //Calls the individual functions to run the simulation
@@ -195,5 +181,5 @@ function simulate() {
 }
 
 function startSimulation(n) {
-    setInterval(simulate, 100)
+    setInterval(simulate, 100);
 }
