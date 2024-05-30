@@ -1,11 +1,9 @@
 //Constants
 const gridHeight = 600
 const gridWidth = 600
-const dt = 5
+const dt = 0.1
 const viscosity = 0.1
 const rho = 1.0
-
-const CLF = 1.9
 
 //Function creates 2D arrays that map out the simulation grid
 function createArr(x, y, val) {
@@ -27,10 +25,12 @@ let p = createArr(gridHeight, gridWidth, 0)
 let fx = createArr(gridHeight, gridWidth, 0)
 let fy = createArr(gridHeight, gridWidth, 0)
 
-for (let j = gridWidth / 2 - 25; j < gridWidth / 2 + 25; j ++) {
-    fy[1][j] = -9.8;
+for (let j = gridWidth / 2 - 50; j < gridWidth / 2 + 50; j ++) {
+    for (let i = gridHeight / 2 - 50; i < gridHeight / 2 + 50; i ++) {
+        fy[i][j] = 5;
+        fx[i][j] = 5;
+    }
 }
-
 
 //Apply the forces to each component of the velocity vectors
 function applyForces(u, v, fx, fy, dt) {
@@ -94,7 +94,7 @@ function pressureCalculation(p, u, v, rho, dt) {
     let divergence = createArr(gridHeight, gridWidth, 0);
     let temp = createArr(gridHeight, gridWidth, 0);
 
-    let h = CLF * 1 / gridHeight;
+    let h = 1 / gridHeight;
 
     for (let i = 1; i < gridHeight-1; i ++) {
         for (let j = 1; j < gridWidth - 1; j ++) {
@@ -120,7 +120,7 @@ function pressureCalculation(p, u, v, rho, dt) {
 
 //Project the velocity field by eliminating divergence such that the "Conservation of Mass" Navier-Stokes equation is satisfied
 function projectVelocity(u, v, p) {
-    let h = CLF * 1 / gridHeight;
+    let h = 1 / gridHeight;
     for (let i = 1; i < gridHeight - 1; i ++) {
         for (let j = 1; j < gridWidth - 1; j ++) {
             u[i][j] -= 0.5 * h * (p[i][j+1] - p[i][j-1]);
@@ -181,5 +181,5 @@ function simulate() {
 }
 
 function startSimulation(n) {
-    setInterval(simulate, 100);
+    setInterval(simulate, 30);
 }
