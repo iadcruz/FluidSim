@@ -4,6 +4,8 @@ const gridWidth = 200;
 const dt = 0.5;
 const viscosity = 0.1;
 const rho = 0.1;
+let time = 0;
+const MaxDistanceDisplaced = 30
 
 // Function creates 2D arrays that map out the simulation grid
 function createArr(x, y, val) {
@@ -44,23 +46,53 @@ for (let i = gridHeight / 2 - 30; i < gridHeight / 2 + 30; i++) {
 //Create obstacle
 
 //Rectangle
-/*for (let i = 75; i < 125; i ++) {
+
+function rectangle() {
+for (let i = 75; i < 125; i ++) {
     for (let j = 75; j < 125; j ++) {
         obstacleGrid[i][j] = true;
     }
-}*/
+ }
+}
+
+function moveobstacle(obstacle) {
+ time += 1
+ let tempamplitude = Math.floor(MaxDistanceDisplaced * Math.sin(time)) 
+ if (obstacle == "rectangle") {
+    for (let i = 75 + tempamplitude; i < 125 + tempamplitude; i ++) {
+        for (let j = 75; j < 125; j ++) {
+            obstacleGrid[i][j] = true;
+        }
+     }
+     if (tempamplitude >= 0) {
+     for (let i = 0; i < 75 + tempamplitude; i ++) {
+        for (let j = 75; j < 125; j ++) {
+            obstacleGrid[i][j] = false;
+        }
+     }
+    } else if (tempamplitude <= 0) {
+        for (let i = 125 + tempamplitude; i < gridHeight; i ++) {
+            for (let j = 75; j < 125; j ++) {
+                obstacleGrid[i][j] = false;
+            }
+         }
+    }
+  }
+ }
+
 
 //Circle
 let r = 25;
 let yC = 100;
 let xC = 100;
 
-for (let j = yC - r; j < yC + r; j ++) {
+/* for (let j = yC - r; j < yC + r; j ++) {
     xL = Math.floor(Math.sqrt(Math.pow(r, 2) - Math.pow(j - yC, 2)));
     for (let i = xC - xL; i < xC + xL; i ++) {
         obstacleGrid[i][j] = true;
     }
 }
+*/
 
 // Apply the forces to each component of the velocity vectors
 function applyForces(u, v, fx, fy, dt) {
@@ -294,6 +326,7 @@ function simulate(field) {
     pressureCalculation(p, u, v, rho, dt);
     projectVelocity(u, v, p);
     display(field);
+    moveobstacle("rectangle");
 }
 
 function startSimulation() {
