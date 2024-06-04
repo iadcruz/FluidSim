@@ -4,8 +4,6 @@ const gridWidth = 200;
 const dt = 0.5;
 const viscosity = 0.1;
 const rho = 0.1;
-let time = 0;
-const MaxDistanceDisplaced = 30
 
 // Function creates 2D arrays that map out the simulation grid
 function createArr(x, y, val) {
@@ -48,38 +46,28 @@ for (let i = gridHeight / 2 - 30; i < gridHeight / 2 + 30; i++) {
 //Rectangle
 
 function rectangle() {
-for (let i = 75; i < 125; i ++) {
-    for (let j = 75; j < 125; j ++) {
-        obstacleGrid[i][j] = true;
-    }
- }
-}
-
-function moveobstacle(obstacle) {
- time += 1
- let tempamplitude = Math.floor(MaxDistanceDisplaced * Math.sin(time)) 
- if (obstacle == "rectangle") {
-    for (let i = 75 + tempamplitude; i < 125 + tempamplitude; i ++) {
+    for (let i = 75; i < 125; i ++) {
         for (let j = 75; j < 125; j ++) {
             obstacleGrid[i][j] = true;
         }
-     }
-     if (tempamplitude >= 0) {
-     for (let i = 0; i < 75 + tempamplitude; i ++) {
-        for (let j = 75; j < 125; j ++) {
-            obstacleGrid[i][j] = false;
-        }
-     }
-    } else if (tempamplitude <= 0) {
-        for (let i = 125 + tempamplitude; i < gridHeight; i ++) {
-            for (let j = 75; j < 125; j ++) {
-                obstacleGrid[i][j] = false;
-            }
-         }
     }
-  }
- }
+}
 
+let time = 0;
+const MaxDistanceDisplaced = 30;
+
+function moveobstacle(obstacle) {
+    time += 1;
+    let tempamplitude = Math.floor(MaxDistanceDisplaced * Math.sin(time));
+    obstacleGrid = createArr(gridHeight, gridWidth, false);
+    if (obstacle == "rectangle") {
+        for (let i = 75 + tempamplitude; i < 125 + tempamplitude; i ++) {
+            for (let j = 75; j < 125; j ++) {
+                obstacleGrid[i][j] = true;
+            }
+        }
+    }
+}
 
 //Circle
 let r = 25;
@@ -315,6 +303,7 @@ function calculateVelocity() {
 
 // Calls the individual functions to run the simulation
 function simulate(field) {
+    moveobstacle("rectangle");
     applyForces(u, v, fx, fy, dt);
     sourceSmoke(u, v, d, s, dt);
     advect(u, v, u, dt);
@@ -326,7 +315,6 @@ function simulate(field) {
     pressureCalculation(p, u, v, rho, dt);
     projectVelocity(u, v, p);
     display(field);
-    moveobstacle("rectangle");
 }
 
 function startSimulation() {
