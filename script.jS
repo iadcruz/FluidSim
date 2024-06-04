@@ -41,46 +41,26 @@ for (let i = gridHeight / 2 - 30; i < gridHeight / 2 + 30; i++) {
     }
 }
 
-//Create obstacle
+// Create obstacle
 
-//Rectangle
-
-function rectangle() {
-    for (let i = 75; i < 125; i ++) {
-        for (let j = 75; j < 125; j ++) {
-            obstacleGrid[i][j] = true;
-        }
+// Rectangle
+/*for (let i = 75; i < 125; i ++) {
+    for (let j = 75; j < 125; j ++) {
+        obstacleGrid[i][j] = true;
     }
-}
+}*/
 
-let time = 0;
-const MaxDistanceDisplaced = 30;
-
-function moveobstacle(obstacle) {
-    time += 1;
-    let tempamplitude = Math.floor(MaxDistanceDisplaced * Math.sin(time));
-    obstacleGrid = createArr(gridHeight, gridWidth, false);
-    if (obstacle == "rectangle") {
-        for (let i = 75 + tempamplitude; i < 125 + tempamplitude; i ++) {
-            for (let j = 75; j < 125; j ++) {
-                obstacleGrid[i][j] = true;
-            }
-        }
-    }
-}
-
-//Circle
+// Circle
 let r = 25;
 let yC = 100;
 let xC = 100;
 
-/* for (let j = yC - r; j < yC + r; j ++) {
+for (let j = yC - r; j < yC + r; j ++) {
     xL = Math.floor(Math.sqrt(Math.pow(r, 2) - Math.pow(j - yC, 2)));
     for (let i = xC - xL; i < xC + xL; i ++) {
         obstacleGrid[i][j] = true;
     }
 }
-*/
 
 // Apply the forces to each component of the velocity vectors
 function applyForces(u, v, fx, fy, dt) {
@@ -243,7 +223,12 @@ function display(f) {
     for (let i = 1; i < gridHeight; i++) {
         for (let j = 1; j < gridWidth; j++) {
             //ctx.fillStyle = colors[i][j];
-            ctx.fillStyle = "rgb(" + colors[i][j][0] + ", " + colors[i][j][1] + ", " + colors[i][j][2] + ")";
+            if (!obstacleGrid[i][j]) {
+                ctx.fillStyle = "rgb(" + colors[i][j][0] + ", " + colors[i][j][1] + ", " + colors[i][j][2] + ")";
+            }
+            else {
+                ctx.fillStyle = "black";
+            }
             ctx.fillRect(j * canvas.width / gridWidth, i * canvas.height / gridHeight, canvas.width / gridWidth, canvas.height / gridHeight);
         }
     }
@@ -303,7 +288,6 @@ function calculateVelocity() {
 
 // Calls the individual functions to run the simulation
 function simulate(field) {
-    moveobstacle("rectangle");
     applyForces(u, v, fx, fy, dt);
     sourceSmoke(u, v, d, s, dt);
     advect(u, v, u, dt);
