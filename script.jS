@@ -62,6 +62,13 @@ for (let j = yC - r; j < yC + r; j ++) {
     }
 }
 
+function draw() {
+    ctx.beginPath();
+    ctx.ellipse(xC * canvas.width / gridWidth, yC * canvas.height / gridHeight, r * canvas.width / gridWidth, r * canvas.height / gridHeight, 0, 0, 2 * Math.PI);
+    ctx.fillStyle = "black";
+    ctx.fill();
+}
+
 // Apply the forces to each component of the velocity vectors
 function applyForces(u, v, fx, fy, dt) {
     for (let i = 1; i < gridHeight - 1; i++) {
@@ -152,7 +159,7 @@ function pressureCalculation(p, u, v, rho, dt) {
         for (let j = 1; j < gridWidth - 1; j++) {
             if (!obstacleGrid[i][j]) {
                 divergence[i][j] = 0.5 * h * (u[i][j + 1] - u[i][j - 1] + v[i + 1][j] - v[i - 1][j]);
-                p[i][j] = 0;
+                //p[i][j] = 0;
             }
         }
     }
@@ -223,12 +230,7 @@ function display(f) {
     for (let i = 1; i < gridHeight; i++) {
         for (let j = 1; j < gridWidth; j++) {
             //ctx.fillStyle = colors[i][j];
-            if (!obstacleGrid[i][j]) {
-                ctx.fillStyle = "rgb(" + colors[i][j][0] + ", " + colors[i][j][1] + ", " + colors[i][j][2] + ")";
-            }
-            else {
-                ctx.fillStyle = "black";
-            }
+            ctx.fillStyle = "rgb(" + colors[i][j][0] + ", " + colors[i][j][1] + ", " + colors[i][j][2] + ")";
             ctx.fillRect(j * canvas.width / gridWidth, i * canvas.height / gridHeight, canvas.width / gridWidth, canvas.height / gridHeight);
         }
     }
@@ -299,6 +301,7 @@ function simulate(field) {
     pressureCalculation(p, u, v, rho, dt);
     projectVelocity(u, v, p);
     display(field);
+    draw();
 }
 
 function startSimulation() {
