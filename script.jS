@@ -2,7 +2,7 @@
 const gridHeight = 200;
 const gridWidth = 200;
 const dt = 0.5;
-const viscosity = 0.1;
+const viscosity = 0.01;
 const rho = 0.1;
 
 // Function creates 2D arrays that map out the simulation grid
@@ -28,45 +28,44 @@ let p = createArr(gridHeight, gridWidth, 0);
 let s = createArr(gridHeight, gridWidth, 0);
 let d = createArr(gridHeight, gridWidth, 0);
 let fx = createArr(gridHeight, gridWidth, 0);
-let fy = createArr(gridHeight, gridWidth, 1);
+let fy = createArr(gridHeight, gridWidth, 5);
 let obstacleGrid = createArr(gridHeight, gridWidth, false);
 
 // Set initial conditions
 for (let i = gridHeight / 2 - 30; i < gridHeight / 2 + 30; i++) {
     for (let j = 1; j < gridWidth / 10; j++) {
-        fy[i][j] = 10;
-        u[i][j] = 20;
-        v[i][j] = 40;
+        fy[i][j] = 0;
+        u[i][j] = 0;
+        v[i][j] = 20;
         s[i][j] = 1.0;
     }
 }
 
-// Create obstacle
+function createObstacle(shape) {
+    if (shape == "rectangle") {
+        for (let i = gridHeight / 2 - 25; i < gridHeight / 2 + 25; i ++) {
+            for (let j = gridWidth / 2 - 25; j < gridWidth / 2 + 25; j ++) {
+                obstacleGrid[i][j] = true;
+            }
+        }
+    } else if (shape == "circle") {
+        let r = 25;
+        let yC = gridHeight / 2;
+        let xC = gridWidth / 2;
 
-// Rectangle
-/*for (let i = 75; i < 125; i ++) {
-    for (let j = 75; j < 125; j ++) {
-        obstacleGrid[i][j] = true;
+        for (let j = yC - r; j < yC + r; j ++) {
+            xL = Math.floor(Math.sqrt(Math.pow(r, 2) - Math.pow(j - yC, 2)));
+            for (let i = xC - xL; i < xC + xL; i ++) {
+                obstacleGrid[i][j] = true;
+            }
+        }
+    } else if (shape == "diagonal") {
+        for (let i = gridHeight / 2 - 25; i < gridHeight / 2 + 25; i ++) {
+            for (let j = 0; j < 10; j ++) {
+                obstacleGrid[i+j][i+j] = true;
+            }
+        }
     }
-}*/
-
-// Circle
-let r = 25;
-let yC = 100;
-let xC = 100;
-
-for (let j = yC - r; j < yC + r; j ++) {
-    xL = Math.floor(Math.sqrt(Math.pow(r, 2) - Math.pow(j - yC, 2)));
-    for (let i = xC - xL; i < xC + xL; i ++) {
-        obstacleGrid[i][j] = true;
-    }
-}
-
-function draw() {
-    ctx.beginPath();
-    ctx.ellipse(xC * canvas.width / gridWidth, yC * canvas.height / gridHeight, r * canvas.width / gridWidth, r * canvas.height / gridHeight, 0, 0, 2 * Math.PI);
-    ctx.fillStyle = "black";
-    ctx.fill();
 }
 
 // Apply the forces to each component of the velocity vectors
@@ -220,7 +219,6 @@ function display(f) {
             normalizedMagnitudes[i][j] = field[i][j] / maxMagnitude;
         }
     }
-    // let colors = getbasic(field);
     let colors = createArr(gridHeight, gridWidth, 0);
     for (let i = 0; i < gridHeight; i ++) {
         for (let j = 0; j < gridWidth; j ++) {
@@ -229,26 +227,14 @@ function display(f) {
     }
     for (let i = 1; i < gridHeight; i++) {
         for (let j = 1; j < gridWidth; j++) {
-            //ctx.fillStyle = colors[i][j];
-            ctx.fillStyle = "rgb(" + colors[i][j][0] + ", " + colors[i][j][1] + ", " + colors[i][j][2] + ")";
+            if (obstacleGrid[i][j]) {
+                ctx.fillStyle = "black";
+            } else {
+                ctx.fillStyle = "rgb(" + colors[i][j][0] + ", " + colors[i][j][1] + ", " + colors[i][j][2] + ")";
+            }
             ctx.fillRect(j * canvas.width / gridWidth, i * canvas.height / gridHeight, canvas.width / gridWidth, canvas.height / gridHeight);
         }
     }
-}
-
-function getbasic(field) {
-    let colors = createArr(gridHeight, gridWidth, 0);
-    for (let i = 0; i < gridHeight; i ++) {
-        for (let j = 0; j < gridWidth; j ++) {
-            if (field[i][j] != 0) {
-                colors[i][j] = "gray";
-            }
-            else {
-                colors[i][j] = "white";
-            }
-        }
-    }
-    return colors;
 }
 
 function interpolateColor(value, color1, color2) {
@@ -289,7 +275,8 @@ function calculateVelocity() {
 }
 
 // Calls the individual functions to run the simulation
-function simulate(field) {
+function simulate(field, shape) {
+    createObstacle(shape);
     applyForces(u, v, fx, fy, dt);
     sourceSmoke(u, v, d, s, dt);
     advect(u, v, u, dt);
@@ -301,7 +288,6 @@ function simulate(field) {
     pressureCalculation(p, u, v, rho, dt);
     projectVelocity(u, v, p);
     display(field);
-    draw();
 }
 
 function startSimulation() {
@@ -313,5 +299,14 @@ function startSimulation() {
     } else if (document.getElementById("smoke").checked) {
         field = "smoke";
     }
-    setInterval(() => simulate(field), 30);
+
+    let shape;
+    if (document.getElementById("rectangle").checked) {
+        shape = "rectangle";
+    } else if (document.getElementById("circle").checked) {
+        shape = "circle";
+    } else if (document.getElementById("diagonal").checked) {
+        shape = "diagonal";
+    }
+    setInterval(() => simulate(field, shape), 30);
 }
